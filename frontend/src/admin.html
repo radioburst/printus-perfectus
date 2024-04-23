@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Livecam DB Admin interface</title>
+  <style>
+    * { padding: 0; margin: 0; }
+
+    html {
+      display: flex;
+      justify-content: center;
+    }
+
+    body {
+      padding: 4em;
+      font-size: 16px;
+      font-family: sans-serif;
+      max-width: 1024px;
+    }
+
+    h2 {
+      margin-top: 2rem;
+      margin-bottom: 1rem;
+    }
+
+    form {
+      display: inline-flex;
+    }
+
+    input[type=button], select {
+      margin: 0;
+      padding: 0.5rem;
+      margin-right: 0.25rem;
+      flex-grow: 1;
+    }
+
+    #tokenResult {
+      padding: 0.5rem 0;
+      font-weight: bold;
+      font-family: monospace;
+      outline: none;
+      background: none;
+      border: none;
+      flex-grow: 1;
+      font-size: larger;
+    }
+
+    #newTokenContainer {
+      display: flex;
+      flex-direction: column;
+    }
+
+    #allTokensContainer {
+      font-family: monospace;
+      white-space: pre;
+    }
+
+    ol {
+      list-style: none;
+    }
+
+    ol li {
+      height: 1.2rem;
+    }
+
+    ol input[type=button] {
+      padding: 0 0.25rem;
+    }
+  </style>
+</head>
+<body>
+  <h1>Livecam DB Admin Interface</h1>
+  <h2>Neuen Token erstellen</h2>
+  <div id="newTokenContainer">
+    <div>
+      <form>
+        <select id="duration">
+          <option value="3600000">1h</option>
+          <option value="7200000">2h</option>
+          <option value="10800000">3h</option>
+          <option value="14400000">4h</option>
+          <option value="18000000">5h</option>
+          <option value="25200000">7h</option>
+          <option value="36000000">10h</option>
+          <option value="54000000">15h</option>
+          <option value="72000000">20h</option>
+          <option value="90000000">25h</option>
+          <option value="108000000">30h</option>
+          <option value="144000000">40h</option>
+          <option value="180000000">50h</option>
+	</select>
+        <input type="button" value="Erstellen!" id="createTokenButton" />
+      </form>
+    </div>
+    <input id="tokenResult" readonly onclick="this.select()"></input>
+  </div>
+  <h2>Gültige Token</h2>
+  <div id="allTokensContainer">
+
+  </div>
+
+  <script>
+    const makeLiWithDeleteButton = (id, valid_until, handler) => {
+      const li = document.createElement('li');
+
+      li.classList.add('token');
+
+      const textContainer = document.createElement('span');
+      const button = document.createElement('input');
+
+      li.appendChild(button);
+      li.appendChild(textContainer);
+
+      const valid_date = new Date(valid_until);
+      
+      textContainer.innerText = `${id}: ${valid_date.toLocaleString()}`; 
+      button.value = 'Löschen';
+      button.setAttribute('type', 'button');
+      button.addEventListener('click', () => handler(id));
+
+      return li;
+    }
+
+    window.addEventListener("DOMContentLoaded", async () => {
+
+      const here = new URL(location.href);
+      const parole = here.searchParams.get("parole") ?? "--";
+
+      document.querySelector("#createTokenButton").addEventListener("click", async () => {
+        const validUntil = Date.now() + Number(document.querySelector("#duration").value);
+        
+        const newToken = await fetch(`/token?parole=${parole}&validUntil=${validUntil}`, { method: "put" });
+        const response = await newToken.text();
+
+        document.querySelector("#tokenResult").value = `https://printus-perfectus.duckdns.org/${response}`;
+        resetAllTokens();
+      });
+
+      const deleteToken = async (id) => {
+        await fetch(`/token?parole=${parole}&id=${id}`, { method: "delete" });
+        resetAllTokens();
+      };
+
+      const resetAllTokens = async () => {
+        const req = await fetch(`/token?parole=${parole}`);
+
+        const ol = document.createElement('ol');
+        const allValidTokens = (await req.json()).forEach(({ id, valid_until }) => 
+          ol.appendChild(makeLiWithDeleteButton(id, valid_until, deleteToken))
+        );
+
+        document.querySelector("#allTokensContainer").innerHTML = '';
+        document.querySelector("#allTokensContainer").appendChild(ol)
+      };
+
+      resetAllTokens();
+
+    });
+  </script>
+</body>
+</html>

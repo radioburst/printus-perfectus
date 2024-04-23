@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Printus Perfectus</title>
+  <style>
+    * { padding: 0; margin: 0; }
+
+    html {
+      display: flex;
+      justify-content: center;
+    }
+
+    body {
+      font-size: 16px;
+      font-family: sans-serif;
+      max-width: 1024px;
+      margin: 1rem;
+      display: flex;
+      flex-direction: column;
+
+      background-image: url("assets/background.jpeg");
+      background-repeat: no-repeat;
+      background-attachment: fixed;
+      background-size: cover;
+    }
+
+    h1 {
+      margin-bottom: 1rem;
+    }
+
+    #videos {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+    }
+
+    img {
+      width: 100%;
+      height: auto;
+      margin-bottom: 2rem;
+      margin-top: 0.5rem;
+      box-shadow: 0 0.1rem 0.2rem 0 rgba(0,0,0,0.3), 0 0 1rem 0 rgba(0,0,0,0.1);
+    }
+
+    #infocontainer {
+    	word-wrap: break-word
+	background-color: white;
+    }
+
+    #temperatures, #jobdetails {
+      display: inline-block;
+    }
+ 
+    #temperatures {
+      margin-right: 2rem;
+    }
+
+
+    #infocontainer ul {
+      list-style: none;
+    }
+    
+    #infocontainer ul li {
+      margin-bottom: 0.2rem;
+      font-size: 1.2rem;
+      word-break: break-all
+    }
+
+    #progress {
+      width: 100%;
+      height: 2rem;
+      border-radius: 0.25rem;
+      overflow: hidden;
+      box-shadow: 0.1rem 0.1rem 0.2em rgba(0,0,0,0.2);
+      background: #EEE;
+      margin: 2rem 0;
+      display: flex;
+    }
+
+    #progress div:first-child {
+      background: #92d186;
+      height: 100%;
+      display: inline-block;
+      text-align: right;
+      padding: 0.5rem;
+    }
+
+    #progress div:last-child {
+      height: 100%;
+      display: inline-block;
+    }
+
+  </style>
+</head>
+<body>
+  <h1>Andi's Druckstube</h1>
+  <div id="infocontainer">
+    <div id="temperatures"></div>
+    <div id="jobdetails"></div>
+  </div>
+  <div id="progress"></div>
+  <div id="videos">
+    <div>Top Cam</div>
+    <img id="cam1" src="#"></img>
+    <div>Z-Axis Cam</div>
+    <img id="cam2" src="#"></img>
+    <div>Nozzle Cam</div>
+    <img id="cam3" src="#"></img>
+  </div>
+
+  <script>
+
+    const refreshPrinterData = async () => {
+      const res = await fetch("/api/printer");
+      const { temperature } = await res.json();
+      const { tool0, bed, Enclosure } = temperature;
+
+      const el = document.querySelector("#temperatures");
+
+      const ul = document.createElement('ul');
+    
+      [{
+        temperature: tool0.actual,
+        name: "Nozzle"
+      }, {
+        temperature: bed.actual,
+        name: "Bed"
+      }, {
+        temperature: Enclosure.actual,
+        name: "Enclosure"
+      }].forEach(({ temperature, name }) => {
+        const li = document.createElement('li');
+        li.innerText = `${name}: ${temperature}°C`;
+        ul.appendChild(li);
+      });
+
+      el.innerHTML = "";
+      el.appendChild(ul);
+    }
+
+    const hhmmss = (seconds) => {
+      const minutes = (seconds - seconds % 60) / 60;
+      const hours = (minutes - minutes % 60) / 60;
+
+      const pad = x => String(x).padStart(2, "0");
+
+      return `${pad(hours)}:${pad(minutes%60)}:${pad(seconds%60)}`;
+
+    }
+
+    const refreshJobData = async () => {
+      const res = await fetch("/api/job");
+      const { job, progress, state } = await res.json();
+      const { printTime, printTimeLeft } = progress;
+
+      const el = document.querySelector("#jobdetails");
+
+      const ul = document.createElement('ul');
+    
+      [{
+        key: job.file.name,
+        name: "Name"
+      }, {
+        key: hhmmss(printTime),
+        name: "Print Time"
+      }, {
+        key: hhmmss(printTimeLeft),
+        name: "Remaining"
+      }].forEach(({ key, name }) => {
+        const li = document.createElement('li');
+        li.innerText = `${name}: ${key}`;
+        ul.appendChild(li);
+      });
+
+      el.innerHTML = "";
+      el.appendChild(ul);
+
+      const progressBar = document.querySelector("#progress");
+      const time = document.createElement("div");
+      const timeRemaining = document.createElement("div");
+
+      const total = printTime + printTimeLeft;
+      time.setAttribute("style", `width:${printTime/total*100}%`);
+      timeRemaining.setAttribute("style", `width:${printTimeLeft/total*100}%`);
+      progressBar.innerHTML = "";
+      progressBar.appendChild(time);
+      progressBar.appendChild(timeRemaining);
+
+      time.innerText = `${Math.floor(printTime/total*100*100)/100}%`;
+    }
+
+    const refresh = () => {
+      refreshPrinterData();
+      refreshJobData();
+    }
+
+    window.addEventListener("DOMContentLoaded", () => {
+      refresh();
+      const here = new URL(window.location.href);
+      const token = here.pathname;
+
+      document.querySelector("#cam1").setAttribute("src",`${token}/cam1`);
+      document.querySelector("#cam2").setAttribute("src",`${token}/cam2`)
+      document.querySelector("#cam3").setAttribute("src",`${token}/cam3`)
+    });
+
+    setInterval(refresh, 1000);
+
+  </script>
+</body>
+</html>

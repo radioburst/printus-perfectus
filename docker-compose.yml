@@ -1,0 +1,17 @@
+version: "3.9"
+
+services:
+  livecam_frontend:
+    container_name: livecam_frontend
+    image: frontend
+    volumes:
+      - ./frontend/data:/data:rw
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: production
+    ports:
+      - "7001:8080"
+    env_file:
+      - ./frontend/.env
+    restart: unless-stopped
