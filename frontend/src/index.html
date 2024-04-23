@@ -20,11 +20,13 @@
       margin: 1rem;
       display: flex;
       flex-direction: column;
+      margin-top: 17rem;
 
       background-image: url("assets/background.jpeg");
       background-repeat: no-repeat;
       background-attachment: fixed;
       background-size: cover;
+      background-position: center top;
     }
 
     h1 {
@@ -45,9 +47,16 @@
       box-shadow: 0 0.1rem 0.2rem 0 rgba(0,0,0,0.3), 0 0 1rem 0 rgba(0,0,0,0.1);
     }
 
-    #infocontainer {
-    	word-wrap: break-word
-	background-color: white;
+    #infocontainer, #welcomecontainer {
+    	word-wrap: break-word;
+	    background-color: rgb(128, 183, 214);
+      border-radius: 0.25rem;
+      margin-bottom: 1rem;
+    }
+
+    #welcomecontainer div, #infocontainer div {
+    	margin: 0.5rem;
+      font-size: 1.2rem;
     }
 
     #temperatures, #jobdetails {
@@ -58,7 +67,6 @@
       margin-right: 2rem;
     }
 
-
     #infocontainer ul {
       list-style: none;
     }
@@ -66,49 +74,62 @@
     #infocontainer ul li {
       margin-bottom: 0.2rem;
       font-size: 1.2rem;
-      word-break: break-all
+      word-break: break-all;
     }
 
     #progress {
-      width: 100%;
       height: 2rem;
       border-radius: 0.25rem;
       overflow: hidden;
       box-shadow: 0.1rem 0.1rem 0.2em rgba(0,0,0,0.2);
       background: #EEE;
-      margin: 2rem 0;
+      margin-right: 0.5rem;
+      margin-left: 0.5rem;
       display: flex;
     }
 
     #progress div:first-child {
-      background: #92d186;
-      height: 100%;
+      background: #41a02e;
       display: inline-block;
       text-align: right;
+      color: white;
       padding: 0.5rem;
+      margin: 0rem;
+      border-radius: 0.25rem;
     }
 
     #progress div:last-child {
-      height: 100%;
       display: inline-block;
     }
 
   </style>
 </head>
 <body>
-  <h1>Andi's Druckstube</h1>
+  <!--<h1>Andi's Druckstube</h1>-->
+  
+  <div id="welcomecontainer">
+    <div>
+      <h2>Welcome to 3D Printus Perfectus!</h2>
+      Perhaps the most ingeniously pieced-together website you'll find on the internet.
+      Once you've adjusted to the modest UI and explored the unique and questionable AI Art, kick back and enjoy watching your print come to life in real time!
+    </div>
+  </div>
+
   <div id="infocontainer">
+    <div>Realtime print stats:</div>
     <div id="temperatures"></div>
     <div id="jobdetails"></div>
+    <div id="progress"></div>
   </div>
-  <div id="progress"></div>
+  
   <div id="videos">
-    <div>Top Cam</div>
+    <div></div>
     <img id="cam1" src="#"></img>
-    <div>Z-Axis Cam</div>
+    <div></div>
     <img id="cam2" src="#"></img>
-    <div>Nozzle Cam</div>
-    <img id="cam3" src="#"></img>
+    <!--<div>Nozzle Cam</div>
+    <img id="cam3" src="#"></img>-->
+    <img src="assets/background.jpeg"></img>
   </div>
 
   <script>
@@ -124,13 +145,13 @@
     
       [{
         temperature: tool0.actual,
-        name: "Nozzle"
+        name: "Nozzle Temp"
       }, {
         temperature: bed.actual,
-        name: "Bed"
+        name: "Bed Temp"
       }, {
         temperature: Enclosure.actual,
-        name: "Enclosure"
+        name: "Enclosure Temp"
       }].forEach(({ temperature, name }) => {
         const li = document.createElement('li');
         li.innerText = `${name}: ${temperature}°C`;
@@ -162,10 +183,10 @@
     
       [{
         key: job.file.name,
-        name: "Name"
+        name: "File"
       }, {
         key: hhmmss(printTime),
-        name: "Print Time"
+        name: "Print time"
       }, {
         key: hhmmss(printTimeLeft),
         name: "Remaining"
@@ -204,7 +225,7 @@
 
       document.querySelector("#cam1").setAttribute("src",`${token}/cam1`);
       document.querySelector("#cam2").setAttribute("src",`${token}/cam2`)
-      document.querySelector("#cam3").setAttribute("src",`${token}/cam3`)
+      //document.querySelector("#cam3").setAttribute("src",`${token}/cam3`)
     });
 
     setInterval(refresh, 1000);

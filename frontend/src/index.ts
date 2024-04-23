@@ -108,7 +108,7 @@ app.get("/:id/cam2", async (req, res) => {
   fetchReq.body?.pipe(res);
 });
 
-app.get("/:id/cam3", async (req, res) => {
+/*app.get("/:id/cam3", async (req, res) => {
   const id = req.params.id as string;
   if (!id || !isTokenValid(id)) res.status(403).end("Forbidden.");
 
@@ -118,7 +118,7 @@ app.get("/:id/cam3", async (req, res) => {
     res.set(key, value);
   });
   fetchReq.body?.pipe(res);
-});
+});*/
 
 app.get("/:id", async (req, res) => {
   try {
@@ -131,6 +131,8 @@ app.get("/:id", async (req, res) => {
       .end(e instanceof Error ? e.message : "Internal Server Error.");
   }
 });
+
+app.use("/assets", express.static(path.join(__dirname, "../assets")));
 
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);
